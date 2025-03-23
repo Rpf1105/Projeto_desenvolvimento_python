@@ -30,9 +30,9 @@ def insertTable(conexao, table):
     query = f'''
         INSERT INTO {table} (cpf, nome, nascimento, oculos) VALUES
         (
-        {input("Digite o cpf:")}, 
-        "{input("Digite o nome:")}", 
-        {input("Digite a data de nascimento em YYYY/MM/DD\n")},
+        '{input("Digite o cpf:")}', 
+        '{input("Digite o nome:")}', 
+        '{input("Digite a data de nascimento em YYYY/MM/DD\n")}',
         {input("Digite se usa oculos 0-nao, 1-sim:")}
         )
         '''
@@ -58,8 +58,10 @@ def queryTest(cursor, query):
         print(query)
         cursor.execute(query)
         conexao.commit()
-    except sqlite3.IntegrityError:
-        raise ValueError("Erro de integridade")
+    except sqlite3.OperationalError:
+        raise ValueError("Erro de operacao")
+    #except sqlite3.IntegrityError:
+        #raise ValueError("Erro de integridade")
 
 
 def closeDb(conexao):
@@ -68,6 +70,6 @@ def closeDb(conexao):
 
 conexao = connectDb()
 defineDb(conexao)
-insertTable(conexao, "Pessoa")
-#queryAll(conexao)
+#insertTable(conexao, "Pessoa")
+queryAll(conexao)
 closeDb(conexao)
