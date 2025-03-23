@@ -18,9 +18,9 @@ def main():
           "2: Ler todas as notas armazenadas\n")
         op = input().lower()
         if op == "1":
-            notaInput.registrar(notaInput.getnome(), notaInput.getnota())
+            notaInput.registrar(notaInput.getmatricula(), notaInput.getnome(), notaInput.getnota())
         elif op == "2":
-            notaOpen.readAll()
+            notaOpen.menuNota()
 
 main()
 
