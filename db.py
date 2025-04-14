@@ -1,6 +1,7 @@
 import sqlite3
 import sqlite3 as conector
-from fileinput import filename
+
+from notaInput import getmatricula, getnota
 
 
 def defineDb(conexao):
@@ -18,8 +19,8 @@ def defineDb(conexao):
     	PRIMARY KEY(codigo)
     )'''
     query3 = '''CREATE TABLE IF NOT EXISTS Inscrição(
-        aluno varchar(255),
-        disciplina varchar(255),
+        aluno varchar(255) NOT NULL,
+        disciplina varchar(255) NOT NULL,
     	Ano INT NOT NULL,
     	Semestre INT NOT NULL,
     	Sim1 Real,
@@ -41,15 +42,43 @@ def defineDb(conexao):
     except ValueError as e:
         print(f"Erro: {e}")
 
+
 class Aluno:
     def __init__(self, nome, matricula):
         self.nome = nome
         self.matricula = matricula
+    def insert(self, con):
+        query = '''INSERT INTO Aluno VALUES(:nome, :matricula)'''
+        queryExec(con, query, self)
+    def update(self, con):
+        self.matricula = getmatricula()
+        query = '''UPDATE Aluno SET nome = :nome WHERE matricula = :matricula'''
+        queryExec(con, query, self)
+    def delete(self, con):
+        self.matricula = getmatricula()
+        query = '''DELETE FROM Aluno WHERE matricula = :matricula'''
+        queryExec(con, query ,self)
+    def select(self, con):
+        self.matricula = getmatricula()
+        query = '''SELECT * FROM Aluno WHERE matricula = :matricula'''
+        queryExec(con, query, self)
 
 class Disciplina:
     def __init__(self, nome, codigo):
         self.nome = nome
         self.codigo = codigo
+    def insert(self, con):
+        query = '''INSERT INTO Disciplina VALUES(:nome, :codigo);'''
+        queryExec(con, query, self)
+    def update(self, con):
+        query = '''UPDATE Disciplina SET nome = :nome WHERE codigo = :codigo'''
+        queryExec(con, query, self)
+    def delete(self, con):
+        query = '''DELETE FROM Disciplina WHERE codigo = :codigo'''
+        queryExec(con, query ,self)
+    def select(self, con):
+        query = '''SELECT * FROM Disciplina WHERE codigo = :codigo'''
+        queryExec(con, query, self)
 
 class Inscricao:
     def __init__(self, aluno, disciplina, ano, semestre):
@@ -57,6 +86,27 @@ class Inscricao:
         self.disciplina = disciplina
         self.ano = ano
         self.semestre = semestre
+        self.avescolha = ""
+        self.nota = ""
+        self.sim1 = ""
+        self.sim2 = ""
+        self.av = ""
+        self.avs = ""
+    def insert(self, con):
+        query = '''INSERT INTO Inscrição(aluno,disciplina,Ano, Semestre) VALUES(:aluno, :disciplina, :ano, :semestre)'''
+        queryExec(con, query, self)
+    def update(self, con):
+        self.avescolha = input("Digite o nome da av a registrar a nota (sim1, sim2, av, avs): ").lower()
+        self.nota = getnota()
+        query = '''UPDATE Inscrição SET :avescolha = :nota WHERE disciplina = :disciplina AND aluno = :aluno'''
+        queryExec(con, query, self)
+    def delete(self, con):
+        query = '''DELETE FROM Inscrição WHERE disciplina = :disciplina AND aluno = :aluno'''
+        queryExec(con, query ,self)
+    def select(self, con):
+        query = '''SELECT * FROM Inscrição WHERE disciplina = :disciplina AND aluno = :aluno'''
+        queryExec(con, query, self)
+
 
 def connectDb():
     try:
@@ -66,46 +116,31 @@ def connectDb():
         print("Erro de banco de dados", err)
         connectDb()
 
-def queryExec(conexao, op, table, obj):
-    query = getSqlQuery(op, table)
-    if query == '0':
-        return 0
+def queryExec(con, query, obj):
     try:
-        queryTest(conexao, query, vars(obj))
+        queryTest(con, query, vars(obj))
+        con.commit()
     except TypeError:
-        queryTest(conexao, query, obj)
+        queryTest(con, query, obj)
     except ValueError as e:
         print(f"Erro: {e}")
 
 def getSqlQuery(op, key):
     try:
         querylist = {
-            '1':{ #insert
-            '1': '''INSERT INTO Aluno VALUES(:nome, :matricula);''',
-            '2': '''INSERT INTO Disciplina VALUES(:nome, :codigo);''',
-            '3': '''INSERT INTO Inscrição(aluno,disciplina,Ano, Semestre) VALUES(:aluno, :disciplina, :ano, :semestre)'''
-            },
-            '2':{ #update
-            '1': '''UPDATE Aluno SET nome = :nome WHERE matricula = :matricula''',
-            '2': '''UPDATE Disciplina SET nome = :nome WHERE codigo = :codigo''',
-            '3': '''UPDATE Inscrição SET :av = :nota WHERE disciplina = :disciplina AND aluno = :aluno'''
-            },
             '3':{ #delete
-            '1': '''DELETE FROM Aluno WHERE matricula = :matricula''',
-            '2': '''DELETE FROM Disciplina WHERE codigo = :codigo''',
-            '3': '''DELETE FROM Inscrição WHERE disciplina = :disciplina AND aluno = :aluno'''
+                '3': '''DELETE FROM Inscrição WHERE disciplina = :disciplina AND aluno = :aluno'''
             }
         }
         return querylist[op][key]
     except KeyError:
         return '0'
 
-def queryTest(conexao, query, params):
+def queryTest(conexao, query, params=()):
     cursor = conexao.cursor()
     try:
         cursor.execute(query, params)
-        conexao.commit()
-    except sqlite3.OperationalError:
+    except sqlite3.ProgrammingError:
         cursor.executemany(query, params)
     except sqlite3.IntegrityError:
         raise ValueError("Erro de integridade")
@@ -116,23 +151,21 @@ def closeDb(conexao):
     if conexao:
         conexao.close()
 
-def queryExecMany(con, query):
+def queryExecMany(con, query, nome):
     lista = []
-    filepath = "D:\\faculdade\\python\\test\\lista_alunos"
-    file = open(filepath, "r")
+    filepath = "lista_alunos"
+    file = open(filepath, "r", encoding='utf-8')
     for line in file:
         line = line.strip()
         line = line.split(",")
+        if nome:
+            print(line[0])
         lista.append(tuple(line))
     print(lista)
-    data = [
-        ('Jane', '1'),
-        ('Joe', '2'),
-        ('John', '3'),
-    ]
-    queryTest(con, query, data)
+    print(query)
+    #queryTest(con, query, lista)
 
 #quer = '''INSERT INTO Inscrição(aluno,disciplina,Ano, Semestre) VALUES(?, ?, 2025, 1)'''
-queryExecMany(connectDb(),"INSERT INTO Aluno (nome, matricula) VALUES (?, ?)")
+#queryExecMany(connectDb(), quer, 1)
 
 
