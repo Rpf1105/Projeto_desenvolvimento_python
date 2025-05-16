@@ -3,7 +3,6 @@ import string
 from datetime import datetime
 import random
 
-from db import queryExec
 
 pasta_alunos = "alunos"
 

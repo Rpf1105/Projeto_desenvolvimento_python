@@ -1,6 +1,5 @@
 import sqlite3
 import sqlite3 as conector
-
 from notaInput import getmatricula, getnota
 
 
@@ -124,17 +123,6 @@ def queryExec(con, query, obj):
         queryTest(con, query, obj)
     except ValueError as e:
         print(f"Erro: {e}")
-
-def getSqlQuery(op, key):
-    try:
-        querylist = {
-            '3':{ #delete
-                '3': '''DELETE FROM Inscrição WHERE disciplina = :disciplina AND aluno = :aluno'''
-            }
-        }
-        return querylist[op][key]
-    except KeyError:
-        return '0'
 
 def queryTest(conexao, query, params=()):
     cursor = conexao.cursor()

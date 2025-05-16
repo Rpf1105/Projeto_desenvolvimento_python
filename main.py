@@ -10,7 +10,6 @@ if not os.path.exists(pasta):
     os.mkdir(pasta)
 
 def dbTable(x):
-    date = datetime.date.today()
     menuOptions = {
             '1':db.Aluno,
             '2':db.Disciplina,
